@@ -53,7 +53,6 @@ resource "kubernetes_secret" "tls_ca" {
 
 resource "kubernetes_secret" "image_pull_secret" {
   count      = var.registry_username != null ? 1 : 0
-  depends_on = [helm_release.rancher]
   metadata {
     name      = "rancher-pull-secret"
     namespace = helm_release.rancher.namespace
