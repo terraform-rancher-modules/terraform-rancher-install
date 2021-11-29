@@ -1,20 +1,23 @@
 locals {
-  rancher_default_helm_values = [
-    "antiAffinity: ${var.rancher_antiaffinity}",
-    "ingress.tls.source: ${var.tls_source}",
-    "hostname: ${var.rancher_hostname}",
-    "bootstrapPassword: ${var.rancher_bootstrap_password}",
-    "replicas: ${var.rancher_replicas}"
-  ]
   rancher_airgap_helm_values = var.airgap ? [
     "rancherImage: ${var.default_registry}/rancher/rancher",
     "systemDefaultRegistry: ${var.default_registry}",
     "useBundledSystemChart: true"
   ] : []
+  rancher_default_helm_values = [
+    "antiAffinity: ${var.rancher_replicas == 1 ? "preferred" : var.rancher_antiaffinity}",
+    "ingress.tls.source: ${var.tls_source}",
+    "hostname: ${var.rancher_hostname}",
+    "bootstrapPassword: ${var.rancher_bootstrap_password}",
+    "replicas: ${var.rancher_replicas}"
+  ]
+  rancher_private_ca_values = var.tls_source == "secret" && var.cacerts_path != null ? [
+    "privateCA: true"
+  ] : []
   rancher_registry_pull_secret = var.registry_username != null ? [
     "imagePullSecrets[0].name: rancher-pull-secret"
   ] : []
-  rancher_helm_values = distinct(flatten([local.rancher_airgap_helm_values, local.rancher_registry_pull_secret, var.rancher_additional_helm_values, local.rancher_default_helm_values]))
+  rancher_helm_values = distinct(flatten([var.rancher_additional_helm_values, local.rancher_airgap_helm_values, local.rancher_registry_pull_secret, local.rancher_private_ca_values, local.rancher_default_helm_values]))
 }
 
 resource "kubernetes_secret" "tls_rancher_ingress" {
@@ -36,7 +39,7 @@ resource "kubernetes_secret" "tls_rancher_ingress" {
 }
 
 resource "kubernetes_secret" "tls_ca" {
-  count = var.tls_source == "secret" ? 1 : 0
+  count = var.tls_source == "secret" && var.cacerts_path != null ? 1 : 0
   metadata {
     name      = "tls-ca"
     namespace = helm_release.rancher.namespace
