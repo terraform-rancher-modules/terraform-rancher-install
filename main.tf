@@ -55,7 +55,7 @@ resource "kubernetes_secret" "tls_ca" {
 }
 
 resource "kubernetes_secret" "image_pull_secret" {
-  count      = var.registry_username != null ? 1 : 0
+  count = var.registry_username != null ? 1 : 0
   metadata {
     name      = "rancher-pull-secret"
     namespace = helm_release.rancher.namespace
@@ -87,6 +87,7 @@ resource "helm_release" "cert_manager" {
   set {
     name  = "installCRDs"
     value = "true"
+    type  = "string"
   }
 }
 
@@ -107,6 +108,7 @@ resource "helm_release" "rancher" {
     content {
       name  = split(":", set.value)[0]
       value = trimprefix(split(":", set.value)[1], " ")
+      type  = trimprefix(split(":", set.value)[1], " ") == "true" || trimprefix(split(":", set.value)[1], " ") == "false" ? "string" : null
     }
   }
 }
