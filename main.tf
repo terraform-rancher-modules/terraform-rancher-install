@@ -4,6 +4,15 @@ locals {
     "systemDefaultRegistry: ${var.default_registry}",
     "useBundledSystemChart: true"
   ] : []
+  cert_manager_airgap_helm_values = var.airgap ? [
+    "image.repository: ${var.default_registry}/quay.io/jetstack/cert-manager-controller",
+    "webhook.image.repository: ${var.default_registry}/quay.io/jetstack/cert-manager-webhook",
+    "cainjector.image.repository: ${var.default_registry}/quay.io/jetstack/cert-manager-cainjector",
+    "startupapicheck.image.repository: ${var.default_registry}/quay.io/jetstack/cert-manager-ctl"
+  ] : []
+  cert_manager_default_helm_values = [
+    "installCRDs: true"
+  ]
   rancher_default_helm_values = [
     "antiAffinity: ${var.rancher_replicas == 1 ? "preferred" : var.rancher_antiaffinity}",
     "ingress.tls.source: ${var.tls_source}",
@@ -18,6 +27,7 @@ locals {
     "imagePullSecrets[0].name: rancher-pull-secret"
   ] : []
   rancher_helm_values = distinct(flatten([var.rancher_additional_helm_values, local.rancher_airgap_helm_values, local.rancher_registry_pull_secret, local.rancher_private_ca_values, local.rancher_default_helm_values]))
+  cert_manager_helm_values = distinct(flatten([local.cert_manager_default_helm_values, local.cert_manager_airgap_helm_values]))
 }
 
 resource "kubernetes_secret" "tls_rancher_ingress" {
@@ -84,10 +94,13 @@ resource "helm_release" "cert_manager" {
   wait                = true
   create_namespace    = true
 
-  set {
-    name  = "installCRDs"
-    value = "true"
-    type  = "string"
+  dynamic "set" {
+    for_each = local.cert_manager_helm_values
+    content {
+      name  = split(":", set.value)[0]
+      value = trimspace(replace(set.value, "${split(":", set.value)[0]}:", ""))
+      type  = trimspace(replace(set.value, "${split(":", set.value)[0]}:", "")) == "true" || trimspace(replace(set.value, "${split(":", set.value)[0]}:", "")) == "false" ? "string" : null
+    }
   }
 }
 
@@ -107,8 +120,8 @@ resource "helm_release" "rancher" {
     for_each = local.rancher_helm_values
     content {
       name  = split(":", set.value)[0]
-      value = trimprefix(split(":", set.value)[1], " ")
-      type  = trimprefix(split(":", set.value)[1], " ") == "true" || trimprefix(split(":", set.value)[1], " ") == "false" ? "string" : null
+      value = trimspace(replace(set.value, "${split(":", set.value)[0]}:", ""))
+      type  = trimspace(replace(set.value, "${split(":", set.value)[0]}:", "")) == "true" || trimspace(replace(set.value, "${split(":", set.value)[0]}:", "")) == "false" ? "string" : null
     }
   }
 }
