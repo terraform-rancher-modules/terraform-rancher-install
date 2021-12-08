@@ -4,12 +4,20 @@ Terraform module to install Rancher using helm to complete an HA installation.
 
 ### Usage
 
+Reference the module in a terraform file.
+
+For example, `rancher.tf`:
 ```hcl
 module "rancher_install" {
   source = "github.com/terraform-rancher-modules/terraform-rancher-install"
 
   rancher_hostname = "rancher.example.com"
 }
+```
+
+```bash
+terraform init
+terraform apply
 ```
 
 ## Examples
