@@ -66,6 +66,20 @@ module "rancher_install" {
 }
 ```
 
+#### Air-gap environment (without auth)
+
+```hcl
+module "rancher_install" {
+  source = "github.com/terraform-rancher-modules/terraform-rancher-install"
+
+  rancher_hostname = "rancher.example.com"
+
+  airgap = true
+  default_registry = "registry.example.com:5000"
+  helm_repository = "https://helm.example.com/rancher-charts/"
+}
+```
+
 ## Requirements
 
 | Name | Version |
