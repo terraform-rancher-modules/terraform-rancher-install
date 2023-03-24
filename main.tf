@@ -93,6 +93,7 @@ resource "helm_release" "cert_manager" {
   repository_password = var.helm_password != null ? var.helm_password : null
   wait                = true
   create_namespace    = true
+  timeout             = 600
 
   dynamic "set" {
     for_each = local.cert_manager_helm_values
