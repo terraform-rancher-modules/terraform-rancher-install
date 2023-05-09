@@ -9,6 +9,7 @@ variable "airgap" {
   default     = false
   type        = bool
 }
+
 variable "cert_manager_namespace" {
   description = "Namesapce to install cert-manager"
   default     = "cert-manager"

@@ -4,10 +4,20 @@ Terraform module to install Rancher using helm to complete an HA installation.
 
 ### Usage
 
-Reference the module in a terraform file.
+Reference the module in a terraform file along with a provider configuration for the `helm` and `kubernetes` providers.
 
 For example, `rancher.tf`:
 ```hcl
+provider "helm" {
+  kubernetes {
+    config_path = var.kubeconfig_file
+  }
+}
+
+provider "kubernetes" {
+  config_path = var.kubeconfig_file
+}
+
 module "rancher_install" {
   source = "github.com/terraform-rancher-modules/terraform-rancher-install"
 
