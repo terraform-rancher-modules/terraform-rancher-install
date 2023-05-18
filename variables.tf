@@ -11,7 +11,7 @@ variable "cert_manager_namespace" {
 
 variable "cert_manager_version" {
   description = "Version of cert-manager to install"
-  default     = "v1.5.1"
+  default     = "v1.11.0"
   type        = string
 }
 
@@ -63,7 +63,7 @@ variable "rancher_replicas" {
 
 variable "rancher_version" {
   description = "Rancher version to install"
-  default     = null
+  default     = "v2.7.0"
   type        = string
 }
 
